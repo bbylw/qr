@@ -1,4 +1,123 @@
-# 超长文本二维码工具
+# Long Text QR Code Tool
+
+A powerful online QR code toolkit that includes both generator and decoder, supporting compressed long text content. This project is entirely frontend-based, requiring no backend service, and can be deployed on any static hosting platform. Developed with the assistance of Windsurf AI for efficient code writing and optimization.
+
+## Key Features
+
+- Long Text Support: Generate QR codes with large text content (3000+ characters) using compression algorithms
+- Multiple Sizes: Supports various dimensions from 256x256 to 1024x1024
+- Smart Decoding: Multi-size adaptive recognition for improved decode success rate
+- Unique UI Design: Inspired by Pornhub's iconic black and orange color scheme
+- Modern Interface: Dark theme design for excellent visual experience and usability
+- Responsive Layout: Perfect support for both mobile and desktop devices
+- No Backend Required: Pure frontend implementation, deployable on any static hosting service
+
+## Design Philosophy
+
+The interface design adopts the popular Pornhub style, featuring:
+
+- Dark background (#1b1b1b) with vibrant orange (#ff9000)
+- Clean and modern user interface
+- Eye-catching buttons and interactive elements
+- Clear visual hierarchy
+- Ergonomic operation flow
+
+## Tech Stack
+
+- Development Tools:
+  - Windsurf AI assisted development for improved efficiency
+
+- Frontend Technologies:
+  - HTML5 + CSS3 + JavaScript
+
+- Core Dependencies:
+  - qrcodejs: QR code generation with multiple sizes and error correction levels
+  - pako: Text compression for long content
+  - jsQR: QR code decoding with multi-size recognition
+  - lz-string: String compression processing
+
+## Functional Modules
+
+### QR Code Generator
+
+- Supports text and URL input
+- Selectable QR code sizes (256x256 to 1024x1024)
+- Multiple error correction levels (L/M/Q/H)
+- Real-time preview
+- One-click download of generated QR code
+- Character count comparison before and after compression
+
+### QR Code Decoder
+
+- Supports file selection and drag-and-drop upload
+- Smart multi-size recognition algorithm
+- Automatic compressed content recognition and decompression
+- Real-time decode result display
+- Clear error messages
+
+## Usage Guide
+
+### Generate QR Code
+
+1. Enter the text or URL in the input box
+2. Select appropriate QR code size
+   - Under 3000 characters: 256x256
+   - 3000-5000 characters: 512x512
+   - Over 5000 characters: 1024x1024
+3. Choose error correction level
+   - Low (L): Suitable for less content
+   - Medium (M): Default option, suitable for most cases
+   - Quarter (Q): Suitable for more content
+   - High (H): Suitable for very large content
+4. Click "Generate QR Code" button
+5. Click "Download QR Code" to save the generated image
+
+### Decode QR Code
+
+1. Drag and drop QR code image to decode area, or click to select file
+2. System will automatically recognize and display the QR code content
+3. If content is compressed, system will automatically decompress and display
+
+## Deployment Guide
+
+This project is deployed on Cloudflare Pages, offering the following advantages:
+
+- Global CDN acceleration
+- Automatic HTTPS
+- Zero-configuration deployment
+- Continuous Integration/Continuous Deployment (CI/CD)
+
+### Deployment Steps
+
+1. Fork this repository to your GitHub account
+2. Login to Cloudflare Dashboard
+3. Go to Pages section
+4. Click "Create a project"
+5. Choose "Connect to Git"
+6. Select your forked repository
+7. Configure deployment options:
+   - Framework preset: None
+   - Build command: Leave empty
+   - Build output directory: /
+   - Root directory: /
+8. Click "Save and Deploy"
+
+After deployment, Cloudflare Pages will automatically assign a domain in the format `project-name.pages.dev`
+
+## Notes
+
+- Choose appropriate QR code size based on text length:
+  - Recommend 256x256 for under 3000 characters
+  - Recommend 512x512 for 3000-5000 characters
+  - Recommend 1024x1024 for over 5000 characters
+- For longer text, higher error correction levels (Q or H) are recommended
+- If generation fails, try increasing QR code size or lowering error correction level
+- Ensure QR code image is clear when decoding, system will automatically try multiple sizes for recognition
+- If decoding fails, try rescanning or using a clearer image
+
+---
+
+## 超长文本二维码工具
 
 一个功能强大的在线二维码工具集，包含生成器和解码器，支持超长文本内容的压缩处理。该项目完全基于前端实现，无需后端服务，可直接部署在静态托管平台上。项目使用 Windsurf AI 辅助开发，实现了高效的代码编写和优化。
 
@@ -24,8 +143,12 @@
 
 ## 技术栈
 
-- 开发工具：Windsurf AI 辅助开发，提升开发效率
-- 前端技术：HTML5 + CSS3 + JavaScript
+- 开发工具：
+  - Windsurf AI 辅助开发，提升开发效率
+
+- 前端技术：
+  - HTML5 + CSS3 + JavaScript
+
 - 核心依赖：
   - qrcodejs：生成二维码，支持多种尺寸和纠错级别
   - pako：实现文本压缩，支持超长文本
@@ -103,9 +226,9 @@
 ## 注意事项
 
 - 根据文本长度选择合适的二维码尺寸：
-  - 3000字以下推荐使用256x256
-  - 3000-5000字推荐使用512x512
-  - 5000字以上推荐使用1024x1024
+  - 3000字以下：256x256
+  - 3000-5000字：512x512
+  - 5000字以上：1024x1024
 - 文本越长，建议选择更高的纠错级别（Q或H）
 - 如果生成失败，可以尝试增加二维码尺寸或降低纠错级别
 - 解码时请确保二维码图片清晰可见，系统会自动尝试多种尺寸进行识别
