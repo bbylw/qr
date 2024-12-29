@@ -458,6 +458,47 @@
             color: #ffffff;
             font-size: 1rem;
         }
+
+        .compressed-content {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #1b1b1b;
+            border: 1px solid #ff9000;
+            border-radius: 4px;
+        }
+        .compressed-content h3 {
+            color: #ff9000;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .compressed-content textarea {
+            width: 100%;
+            min-height: 60px;
+            background-color: #2b2b2b;
+            color: #ffffff;
+            border: 1px solid #ff9000;
+            padding: 8px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .copy-button {
+            background-color: #ff9000;
+            color: #000000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .copy-button:hover {
+            background-color: #ffa533;
+        }
+        .copy-success {
+            color: #00ff00;
+            margin-left: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -558,6 +599,12 @@
                     <li class="usage-list-item">4. 所有二维码处理完成后，将自动显示完整内容</li>
                 </ul>
             </div>
+        </div>
+        <div id="compressed-content" class="compressed-content" style="display: none;">
+            <h3>压缩后的内容（可直接用于解码）：</h3>
+            <textarea id="compressed-text" readonly></textarea>
+            <button class="copy-button" onclick="copyCompressedContent()">复制内容</button>
+            <span id="copy-success" class="copy-success">复制成功!</span>
         </div>
     </div>
 
@@ -771,6 +818,11 @@
                 `;
                 qrcodeContainer.appendChild(instructions);
 
+                // 显示压缩内容
+                const compressedContent = 'v2' + compressed;
+                document.getElementById('compressed-text').value = compressedContent;
+                document.getElementById('compressed-content').style.display = 'block';
+
             } catch (error) {
                 console.error('生成二维码时出错:', error);
                 qrcodeContainer.innerHTML = `
@@ -784,6 +836,19 @@
         function updateCharCount() {
             const text = document.getElementById('text').value;
             document.getElementById('charCount').textContent = text.length;
+        }
+
+        function copyCompressedContent() {
+            const textarea = document.getElementById('compressed-text');
+            textarea.select();
+            document.execCommand('copy');
+            
+            // 显示复制成功提示
+            const successMessage = document.getElementById('copy-success');
+            successMessage.style.display = 'inline';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 2000);
         }
     </script>
 </body>
