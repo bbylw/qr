@@ -7,6 +7,7 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.0.3/dist/pako.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.7.1/dist/jszip.min.js"></script>
     <style>
         :root {
             --primary-color: #ff9000;
@@ -16,8 +17,6 @@
             --bg-input: #2b2b2b;
             --text-light: #ffffff;
             --text-gray: #888888;
-            --border-color: #cccccc;
-            --text-color: #333333;
         }
 
         * {
@@ -28,20 +27,18 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
             background-color: var(--bg-dark);
             color: var(--text-light);
             line-height: 1.6;
-            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
-            max-width: min(90%, 800px);
+            max-width: 800px;
             margin: 0 auto;
-            padding: 0;
             background-color: var(--bg-darker);
             border-radius: 12px;
+            padding: 30px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
@@ -190,18 +187,55 @@
             display: none;
         }
 
-        .info {
-            margin: 1rem 0;
-            color: var(--primary-color);
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .info-box {
+            background-color: var(--bg-input);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: var(--text-light);
         }
 
-        #charCount {
-            font-weight: 700;
-            font-size: 1.1rem;
+        .info-box-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .info-box-item {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-box-label {
+            color: var(--text-light);
+        }
+
+        .info-box-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .usage-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .usage-list-item {
+            margin: 8px 0;
+            color: var(--text-light);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .usage-list-item:before {
+            content: "•";
+            color: var(--primary-color);
+            margin-right: 10px;
         }
 
         .error {
@@ -239,7 +273,7 @@
         .qr-part {
             margin-bottom: 20px;
             padding: 15px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--text-gray);
             border-radius: 8px;
             background: #ffffff;
         }
@@ -361,6 +395,69 @@
             color: var(--primary-hover);
             text-decoration: underline;
         }
+
+        .compression-info {
+            background-color: #2b2b2b;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #ffffff;
+        }
+
+        .compression-info-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .compression-info-item {
+            margin: 10px 0;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 144, 0, 0.2);
+        }
+
+        .compression-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .compression-info-label {
+            color: #ffffff;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .compression-info-value {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .usage-info {
+            background-color: #2b2b2b;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #ffffff;
+        }
+
+        .usage-info-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .usage-info-item {
+            margin: 8px 0;
+            color: #ffffff;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -369,7 +466,7 @@
 
         <!-- 添加使用说明 -->
         <div class="info-box">
-            <h2>📝 使用说明</h2>
+            <h2 class="info-box-title">📝 使用说明</h2>
             <div class="steps">
                 <div class="step">
                     <span class="step-number">1</span>
@@ -422,115 +519,271 @@
 
         <div class="button-group">
             <button id="generate-btn" onclick="generateQR()">生成二维码</button>
-            <button id="download-btn" onclick="downloadQR()" style="display: none;">下载二维码</button>
         </div>
 
-        <div id="qrcode-container" style="display: none;">
+        <div id="qrcode-container">
             <div id="qrcode"></div>
+            <div class="compression-info">
+                <div class="compression-info-title">压缩统计</div>
+                <div class="compression-info-item">
+                    <span class="compression-info-label">原始文本：</span>
+                    <span class="compression-info-value"><span id="originalLength">0</span> 字符</span>
+                </div>
+                <div class="compression-info-item">
+                    <span class="compression-info-label">压缩后：</span>
+                    <span class="compression-info-value"><span id="compressedLength">0</span> 字符</span>
+                </div>
+                <div class="compression-info-item">
+                    <span class="compression-info-label">压缩率：</span>
+                    <span class="compression-info-value"><span id="compressionRatio">0</span>%</span>
+                </div>
+            </div>
+            <div class="compression-info">
+                <div class="compression-info-title">分段信息</div>
+                <div class="compression-info-item">
+                    <span class="compression-info-label">总段数：</span>
+                    <span class="compression-info-value"><span id="totalSegments">0</span></span>
+                </div>
+                <div class="compression-info-item">
+                    <span class="compression-info-label">每段大小限制：</span>
+                    <span class="compression-info-value">2000 字符</span>
+                </div>
+            </div>
+            <div class="usage-info">
+                <div class="usage-info-title">使用说明</div>
+                <ul class="usage-list">
+                    <li class="usage-list-item">1. 请按顺序保存所有二维码图片</li>
+                    <li class="usage-list-item">2. 使用解码工具时，需要按顺序处理所有二维码</li>
+                    <li class="usage-list-item">3. 确保扫描时二维码图片清晰完整</li>
+                    <li class="usage-list-item">4. 所有二维码处理完成后，将自动显示完整内容</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <script>
-        function generateQR() {
-            const text = document.getElementById('text').value;
-            const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '';
+        function calculateQRParams(textLength) {
+            // 固定使用最大版本和最低纠错级别，确保最大数据容量
+            const typeNumber = 40;
+            const errorCorrectionLevel = 'L';
 
-            if (text.length === 0) {
-                alert('请输入要生成二维码的文本内容');
+            // 固定使用较大尺寸，确保扫描质量
+            const size = 800;  // 使用固定的大尺寸
+
+            return {
+                typeNumber,
+                errorCorrectionLevel,
+                size
+            };
+        }
+
+        async function generateQR() {
+            const text = document.getElementById('text').value;
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            qrcodeContainer.innerHTML = '';
+            qrcodeContainer.style.display = 'block';
+
+            if (!text) {
+                qrcodeContainer.innerHTML = '<div style="color: red;">请输入要生成二维码的文本内容</div>';
                 return;
             }
 
             try {
-                // 使用 GZIP 压缩
-                const textEncoder = new TextEncoder();
-                const uint8Array = textEncoder.encode(text);
-                const compressed = pako.gzip(uint8Array);
+                // 压缩文本
+                const compressed = LZString.compressToEncodedURIComponent(text);
                 
-                // 转换为 URL 安全的 base64
-                const base64 = btoa(String.fromCharCode.apply(null, compressed))
-                    .replace(/\+/g, '-')
-                    .replace(/\//g, '_')
-                    .replace(/=+$/, '');
+                // 降低单段数据量以提高可靠性
+                const MAX_LENGTH = 2000;  // 进一步降低单段数据量
+                const segments = [];
+                
+                // 分段
+                for (let i = 0; i < compressed.length; i += MAX_LENGTH) {
+                    segments.push(compressed.slice(i, i + MAX_LENGTH));
+                }
 
-                // 添加版本标识
-                const finalText = "v1:" + base64;
-
-                // 创建二维码容器
-                const qrContainer = document.createElement('div');
-                qrContainer.style.backgroundColor = '#ffffff';
-                qrContainer.style.padding = '20px';
-                qrContainer.style.borderRadius = '8px';
-                qrcodeDiv.appendChild(qrContainer);
-
+                // 创建进度提示
+                const progressInfo = document.createElement('div');
+                progressInfo.style.marginBottom = '20px';
+                progressInfo.style.color = '#fff';
+                progressInfo.textContent = `正在生成 ${segments.length} 个二维码...`;
+                qrcodeContainer.appendChild(progressInfo);
+                
                 // 生成二维码
-                new QRCode(qrContainer, {
-                    text: finalText,
-                    width: document.getElementById('size').value,
-                    height: document.getElementById('size').value,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel[document.getElementById('level').value]
-                });
+                for (let i = 0; i < segments.length; i++) {
+                    const segmentText = `v3${(i + 1).toString().padStart(2, '0')}${segments.length.toString().padStart(2, '0')}${segments[i]}`;
+                    
+                    // 使用固定参数
+                    const params = calculateQRParams(segmentText.length);
+                    
+                    // 创建容器
+                    const container = document.createElement('div');
+                    container.style.marginBottom = '30px';
+                    container.style.textAlign = 'center';
+                    container.style.backgroundColor = '#2b2b2b';
+                    container.style.padding = '20px';
+                    container.style.borderRadius = '8px';
+                    container.style.border = '1px solid #ff9000';
+                    
+                    // 添加标题
+                    const title = document.createElement('div');
+                    title.style.marginBottom = '15px';
+                    title.style.fontSize = '16px';
+                    title.style.fontWeight = 'bold';
+                    title.style.color = '#fff';
+                    title.textContent = `第 ${i + 1} 段（共 ${segments.length} 段）`;
+                    container.appendChild(title);
+                    
+                    // 添加二维码容器
+                    const qrDiv = document.createElement('div');
+                    qrDiv.style.backgroundColor = '#fff';
+                    qrDiv.style.padding = '40px';
+                    qrDiv.style.borderRadius = '4px';
+                    qrDiv.style.display = 'inline-block';
+                    container.appendChild(qrDiv);
+                    
+                    // 添加信息
+                    const info = document.createElement('div');
+                    info.style.marginTop = '10px';
+                    info.style.fontSize = '14px';
+                    info.style.color = '#fff';
+                    info.textContent = `内容长度: ${segmentText.length} 字符`;
+                    container.appendChild(info);
+                    
+                    // 添加下载按钮
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = '下载此二维码';
+                    downloadBtn.style.marginTop = '15px';
+                    downloadBtn.style.fontSize = '14px';
+                    downloadBtn.style.padding = '8px 16px';
+                    downloadBtn.style.backgroundColor = '#ff9000';
+                    downloadBtn.style.color = '#fff';
+                    downloadBtn.style.border = 'none';
+                    downloadBtn.style.borderRadius = '4px';
+                    downloadBtn.style.cursor = 'pointer';
+                    container.appendChild(downloadBtn);
+                    
+                    // 生成二维码
+                    try {
+                        const qr = new QRCode(qrDiv, {
+                            text: segmentText,
+                            width: params.size,
+                            height: params.size,
+                            typeNumber: params.typeNumber,
+                            correctLevel: QRCode.CorrectLevel[params.errorCorrectionLevel],
+                            colorDark: "#000000",
+                            colorLight: "#ffffff"
+                        });
 
-                // 添加压缩信息
-                const infoDiv = document.createElement('div');
-                infoDiv.style.marginTop = '10px';
-                infoDiv.style.color = 'var(--text-gray)';
-                infoDiv.style.fontSize = '0.9em';
-                infoDiv.textContent = `原始文本 ${text.length} 字符，压缩后 ${finalText.length} 字符`;
-                qrcodeDiv.appendChild(infoDiv);
+                        // 更新进度
+                        progressInfo.textContent = `已生成 ${i + 1} / ${segments.length} 个二维码`;
+                        
+                        // 设置下载事件
+                        downloadBtn.onclick = () => {
+                            const canvas = qrDiv.querySelector('canvas');
+                            if (canvas) {
+                                // 创建一个新的canvas，添加白色边距
+                                const newCanvas = document.createElement('canvas');
+                                const padding = 100; // 边距像素
+                                newCanvas.width = canvas.width + (padding * 2);
+                                newCanvas.height = canvas.height + (padding * 2);
+                                const ctx = newCanvas.getContext('2d');
+                                
+                                // 填充白色背景
+                                ctx.fillStyle = '#FFFFFF';
+                                ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
+                                
+                                // 在中间绘制原始二维码
+                                ctx.drawImage(canvas, padding, padding);
+                                
+                                // 下载带边距的二维码
+                                const url = newCanvas.toDataURL('image/png');
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `qrcode-${i + 1}-of-${segments.length}.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            }
+                        };
+                    } catch (qrError) {
+                        console.error(`生成第 ${i + 1} 个二维码时出错:`, qrError);
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.color = '#ff4444';
+                        errorDiv.style.marginTop = '10px';
+                        errorDiv.textContent = `生成失败: ${qrError.message}`;
+                        container.appendChild(errorDiv);
+                    }
+                    
+                    qrcodeContainer.appendChild(container);
+                }
 
-                // 添加解码提示
-                const decodeInfo = document.createElement('div');
-                decodeInfo.style.marginTop = '20px';
-                decodeInfo.style.padding = '15px';
-                decodeInfo.style.background = 'rgba(255, 144, 0, 0.1)';
-                decodeInfo.style.borderRadius = '8px';
-                decodeInfo.style.borderLeft = '4px solid var(--primary-color)';
-                decodeInfo.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <strong>⚠️ 重要提示</strong>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        此二维码已经过压缩编码，需要使用专门的解码工具才能查看原文。
-                    </div>
-                    <div>
-                        <a href="decode.html" class="decode-link" target="_blank" style="color: var(--primary-color); font-weight: bold; text-decoration: none;">
-                            👉 点击这里打开解码工具
-                        </a>
-                    </div>
+                // 移除进度提示
+                progressInfo.remove();
+
+                // 显示统计信息
+                const statsContainer = document.createElement('div');
+                statsContainer.style.marginTop = '30px';
+                statsContainer.style.padding = '20px';
+                statsContainer.style.backgroundColor = '#2b2b2b';
+                statsContainer.style.borderRadius = '8px';
+                statsContainer.style.border = '1px solid #ff9000';
+                statsContainer.style.color = '#fff';
+
+                const compressionStats = document.createElement('div');
+                compressionStats.style.marginBottom = '15px';
+                compressionStats.innerHTML = `
+                    <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">压缩统计：</div>
+                    <div style="color: #fff;">原始文本：<span style="color: #ff9000; font-weight: bold;">${text.length}</span> 字符</div>
+                    <div style="color: #fff;">压缩后：<span style="color: #ff9000; font-weight: bold;">${compressed.length}</span> 字符</div>
+                    <div style="color: #fff;">压缩率：<span style="color: #ff9000; font-weight: bold;">${Math.round((compressed.length - text.length) / text.length * 100)}%</span></div>
                 `;
-                qrcodeDiv.appendChild(decodeInfo);
 
-                document.getElementById('qrcode-container').style.display = 'block';
-                document.getElementById('download-btn').style.display = 'block';
+                const segmentStats = document.createElement('div');
+                segmentStats.innerHTML = `
+                    <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">分段信息：</div>
+                    <div style="color: #fff;">总段数：<span style="color: #ff9000; font-weight: bold;">${segments.length}</span></div>
+                    <div style="color: #fff;">每段大小限制：<span style="color: #ff9000; font-weight: bold;">${MAX_LENGTH}</span> 字符</div>
+                `;
+
+                statsContainer.appendChild(compressionStats);
+                statsContainer.appendChild(segmentStats);
+                qrcodeContainer.appendChild(statsContainer);
+
+                // 添加使用说明
+                const instructions = document.createElement('div');
+                instructions.style.marginTop = '20px';
+                instructions.style.padding = '20px';
+                instructions.style.backgroundColor = '#2b2b2b';
+                instructions.style.borderRadius = '8px';
+                instructions.style.border = '1px solid #ff9000';
+                instructions.style.color = '#fff';
+                instructions.innerHTML = `
+                    <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">使用说明：</div>
+                    <ol style="margin: 10px 0; padding-left: 20px; color: #fff;">
+                        <li>请按顺序保存所有二维码图片</li>
+                        <li>使用解码工具时，需要按顺序处理所有二维码</li>
+                        <li>确保扫描时二维码图片清晰完整</li>
+                        <li>所有二维码处理完成后，将自动显示完整内容</li>
+                    </ol>
+                    <a href="decode.html" target="_blank" style="color: #ff9000; text-decoration: none; font-weight: bold;">
+                        👉 打开解码工具
+                    </a>
+                `;
+                qrcodeContainer.appendChild(instructions);
 
             } catch (error) {
                 console.error('生成二维码时出错:', error);
-                alert('生成二维码时出错：' + error.message);
+                qrcodeContainer.innerHTML = `
+                    <div style="color: #ff4444; padding: 20px; background-color: #2b2b2b; border-radius: 8px; border: 1px solid #ff4444;">
+                        <strong>错误：</strong> ${error.message}
+                    </div>
+                `;
             }
         }
 
         function updateCharCount() {
             const text = document.getElementById('text').value;
-            const charCount = document.getElementById('charCount');
-            charCount.textContent = `${text.length} 字符`;
-            charCount.style.color = 'inherit';
-        }
-
-        function downloadQR() {
-            const canvas = document.querySelector("#qrcode canvas");
-            if (!canvas) return;
-            
-            try {
-                const link = document.createElement('a');
-                link.download = 'qrcode.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            } catch (error) {
-                alert('下载二维码时出错：' + error.message);
-            }
+            document.getElementById('charCount').textContent = text.length;
         }
     </script>
 </body>

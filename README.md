@@ -1,236 +1,231 @@
 # Long Text QR Code Tool
-![](https://cdn.jsdelivr.net/gh/pusvsimg/img@main/Image/20241229100113929.png)
 
-A powerful online QR code toolkit that includes both generator and decoder, supporting compressed long text content. This project is entirely frontend-based, requiring no backend service, and can be deployed on any static hosting platform. Developed with the assistance of Windsurf AI for efficient code writing and optimization.
+A powerful online QR code toolkit that includes both generator and decoder, supporting compressed long text content. Featuring a classic black and orange UI design inspired by Pornhub's iconic theme, this project is entirely frontend-based, requiring no backend service, and can be deployed on any static hosting platform.
 
 ## Key Features
 
+ 
 - Long Text Support: Generate QR codes with large text content (3000+ characters) using compression algorithms
-- Multiple Sizes: Supports various dimensions from 256x256 to 1024x1024
-- Smart Decoding: Multi-size adaptive recognition for improved decode success rate
-- Unique UI Design: Inspired by Pornhub's iconic black and orange color scheme
-- Modern Interface: Dark theme design for excellent visual experience and usability
+- Multi-segment Generation: Automatically split long text into segments (2000 characters limit per segment)
+- Smart Decoding: Support sequential recognition of multiple QR codes, automatically merge and restore complete content
+- Dark Theme: Dark background with bright text for excellent visual experience
 - Responsive Layout: Perfect support for both mobile and desktop devices
 - No Backend Required: Pure frontend implementation, deployable on any static hosting service
-
-## Design Philosophy
-
-The interface design adopts the popular Pornhub style, featuring:
-
-- Dark background (#1b1b1b) with vibrant orange (#ff9000)
-- Clean and modern user interface
-- Eye-catching buttons and interactive elements
-- Clear visual hierarchy
-- Ergonomic operation flow
+- **Classic Design**: UI and color scheme inspired by Pornhub's iconic black and orange theme
+- **Frontend Only**: No backend required, can be deployed on any static hosting
 
 ## Tech Stack
 
-- Development Tools:
-  - Windsurf AI assisted development for improved efficiency
+### Frontend Technologies
 
-- Frontend Technologies:
-  - HTML5 + CSS3 + JavaScript
 
-- Core Dependencies:
-  - qrcodejs: QR code generation with multiple sizes and error correction levels
-  - pako: Text compression for long content
-  - jsQR: QR code decoding with multi-size recognition
-  - lz-string: String compression processing
+- HTML5 + CSS3 + JavaScript
+
+- Responsive Design
+
+- Dark Theme UI
+
+
+### Core Dependencies
+
+- qrcodejs: QR code generation with multiple sizes and error correction levels
+- lz-string: Text compression for long content support
+- jsQR: QR code decoding with multi-segment recognition
+
+- pako: Data compression processing
 
 ## Functional Modules
 
-### QR Code Generator
+### QR Code Generator (index.html)
+- Text Input: Support input of any length text content
+- Auto Segmentation: Automatically segment text when exceeding length limit
+- Compression: Use LZ-String for text compression
+- Information Display:
+  - Original text length
+  - Compressed length
+  - Compression ratio
+  - Number of segments
+- Download: Support downloading generated QR codes individually
 
-- Supports text and URL input
-- Selectable QR code sizes (256x256 to 1024x1024)
-- Multiple error correction levels (L/M/Q/H)
-- Real-time preview
-- One-click download of generated QR code
-- Character count comparison before and after compression
-
-### QR Code Decoder
-
-- Supports file selection and drag-and-drop upload
-- Smart multi-size recognition algorithm
-- Automatic compressed content recognition and decompression
-- Real-time decode result display
-- Clear error messages
+### QR Code Decoder (decode.html)
+- File Upload: Support drag-and-drop or file selection
+- Multi-segment Processing: Support sequential processing of multiple QR codes
+- Auto Decompression: Automatically recognize and decompress content
+- Real-time Display: Instant display of decoded results
+- Error Handling: Clear error messages
 
 ## Usage Guide
 
 ### Generate QR Code
 
-1. Enter the text or URL in the input box
-2. Select appropriate QR code size
-   - Under 3000 characters: 256x256
-   - 3000-5000 characters: 512x512
-   - Over 5000 characters: 1024x1024
-3. Choose error correction level
-   - Low (L): Suitable for less content
-   - Medium (M): Default option, suitable for most cases
-   - Quarter (Q): Suitable for more content
-   - High (H): Suitable for very large content
-4. Click "Generate QR Code" button
-5. Click "Download QR Code" to save the generated image
+1. Enter the text in the input box
+2. System will automatically calculate and display:
+   - Original text length
+   - Compressed length
+   - Compression ratio
+   - Number of QR codes needed
+3. Click "Generate QR Code" button
+4. Download all generated QR codes in sequence
 
 ### Decode QR Code
 
-1. Drag and drop QR code image to decode area, or click to select file
-2. System will automatically recognize and display the QR code content
-3. If content is compressed, system will automatically decompress and display
+1. Open the decoder tool page
+2. Upload QR code images in the order they were generated
+3. Wait for the system to process automatically
+4. Complete content will be displayed after all QR codes are processed
+
+## Important Notes
+
+1. When generating QR codes:
+   - Text will be automatically segmented, 2000 characters per segment
+   - Save all generated QR codes in sequence
+   - Use larger size to ensure scanning quality
+
+2. When decoding QR codes:
+   - Process QR codes in the exact order they were generated
+   - Ensure QR code images are clear and complete
+   - Wait for all QR codes to be processed before viewing complete content
 
 ## Deployment Guide
 
-This project is deployed on Cloudflare Pages, offering the following advantages:
+This is a static website that can be deployed on any static hosting platform:
 
-- Global CDN acceleration
-- Automatic HTTPS
-- Zero-configuration deployment
-- Continuous Integration/Continuous Deployment (CI/CD)
+1. Download project files:
+   - index.html (Generator)
+   - decode.html (Decoder)
+   - README.md (Documentation)
 
-### Deployment Steps
+2. Upload to static hosting service:
+   - GitHub Pages
+   - Vercel
+   - Netlify
+   - Or any web server that supports static websites
 
-1. Fork this repository to your GitHub account
-2. Login to Cloudflare Dashboard
-3. Go to Pages section
-4. Click "Create a project"
-5. Choose "Connect to Git"
-6. Select your forked repository
-7. Configure deployment options:
-   - Framework preset: None
-   - Build command: Leave empty
-   - Build output directory: /
-   - Root directory: /
-8. Click "Save and Deploy"
+3. Access index.html to start using
 
-After deployment, Cloudflare Pages will automatically assign a domain in the format `project-name.pages.dev`
+## Browser Compatibility
 
-## Notes
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
 
-- Choose appropriate QR code size based on text length:
-  - Recommend 256x256 for under 3000 characters
-  - Recommend 512x512 for 3000-5000 characters
-  - Recommend 1024x1024 for over 5000 characters
-- For longer text, higher error correction levels (Q or H) are recommended
-- If generation fails, try increasing QR code size or lowering error correction level
-- Ensure QR code image is clear when decoding, system will automatically try multiple sizes for recognition
-- If decoding fails, try rescanning or using a clearer image
+## License
+
+MIT License
 
 ---
 
-## 超长文本二维码工具
+# 长文本二维码工具
 
-一个功能强大的在线二维码工具集，包含生成器和解码器，支持超长文本内容的压缩处理。该项目完全基于前端实现，无需后端服务，可直接部署在静态托管平台上。项目使用 Windsurf AI 辅助开发，实现了高效的代码编写和优化。
+一个功能强大的在线二维码工具包，包含生成器和解码器，支持压缩的长文本内容。采用经典的Pornhub黑橙配色设计风格，项目完全基于前端实现，无需后端服务，可以部署在任何静态托管平台上。
 
 ## 主要特点
 
-- 支持超长文本：通过压缩算法处理，可生成包含大量文本的二维码（支持3000字以上）
-- 多种尺寸选择：支持256x256到1024x1024的不同尺寸
-- 智能解码：支持多尺寸自适应识别，提高解码成功率
-- 独特UI设计：灵感来自 Pornhub 的标志性黑橙配色方案
-- 现代化界面：深色主题设计，提供出色的视觉体验和易用性
+ 
+- 支持长文本：通过压缩算法处理，可生成包含大量文本的二维码（支持3000字以上）
+- 多段生成：自动将长文本分段处理，每段限制在2000字符以内
+- 智能解码：支持多段二维码顺序识别，自动合并还原完整内容
+- 深色主题：采用深色背景配合明亮的文字，提供出色的视觉体验
 - 响应式布局：完美支持移动端和桌面端
 - 无需后端：纯前端实现，可部署于任意静态托管服务
-
-## 设计理念
-
-项目的界面设计采用了广受欢迎的 Pornhub 风格，特点是：
-
-- 深色背景 (#1b1b1b) 搭配鲜明的橙色 (#ff9000)
-- 简约现代的用户界面
-- 醒目的按钮和交互元素
-- 清晰的视觉层次
-- 符合人体工程学的操作流程
+- **经典设计**：UI和配色方案源自Pornhub标志性的黑橙配色
+- **纯前端实现**：无需后端，可部署于任意静态托管平台
 
 ## 技术栈
 
-- 开发工具：
-  - Windsurf AI 辅助开发，提升开发效率
+### 前端技术
+- HTML5 + CSS3 + JavaScript
 
-- 前端技术：
-  - HTML5 + CSS3 + JavaScript
+- Responsive Design
 
-- 核心依赖：
-  - qrcodejs：生成二维码，支持多种尺寸和纠错级别
-  - pako：实现文本压缩，支持超长文本
-  - jsQR：进行二维码解码，支持多尺寸识别
-  - lz-string：处理字符串压缩
+- Dark Theme UI
+
+
+### 核心依赖
+
+- qrcodejs：生成二维码，支持多种尺寸和纠错级别
+- lz-string：实现文本压缩，支持长文本
+- jsQR：进行二维码解码，支持多段识别
+
+- pako：处理数据压缩
 
 ## 功能模块
 
-### 二维码生成器
+### 二维码生成器（index.html）
+- 文本输入：支持输入任意长度的文本内容
+- 自动分段：超过限制长度自动分段处理
+- 压缩处理：使用 LZ-String 进行文本压缩
+- 信息显示：
+  - 显示原始文本长度
+  - 显示压缩后长度
+  - 显示压缩率
+  - 显示分段数量
+- 下载功能：支持逐个下载生成的二维码图片
 
-- 支持文本和URL输入
-- 可选二维码尺寸（256x256到1024x1024）
-- 提供多级别纠错选项（L/M/Q/H）
-- 支持即时预览
-- 一键下载生成的二维码
-- 显示压缩前后的字符数对比
-
-### 二维码解码器
-
-- 支持文件选择和拖拽上传
-- 智能多尺寸识别算法
-- 自动识别压缩内容并解压
-- 实时显示解码结果
-- 清晰的错误提示
+### 二维码解码器（decode.html）
+- 文件上传：支持拖拽或选择文件上传
+- 多段处理：支持按顺序处理多个二维码图片
+- 自动解压：自动识别压缩内容并解压
+- 实时显示：即时显示解码结果
+- 错误处理：提供清晰的错误提示
 
 ## 使用说明
 
 ### 生成二维码
 
-1. 在文本框中输入需要转换的文本或网址
-2. 选择合适的二维码大小
-   - 3000字以下：256x256
-   - 3000-5000字：512x512
-   - 5000字以上：1024x1024
-3. 选择适当的纠错级别
-   - 低级别 (L)：适合内容较少的场景
-   - 中级别 (M)：默认选项，适合大多数场景
-   - 较高级别 (Q)：适合内容较多的场景
-   - 高级别 (H)：适合内容特别多的场景
-4. 点击"生成二维码"按钮
-5. 可以点击"下载二维码"保存生成的图片
+1. 在文本框中输入需要转换的文本
+2. 系统会自动计算并显示：
+   - 原始文本长度
+   - 压缩后长度
+   - 压缩率
+   - 所需二维码数量
+3. 点击"生成二维码"按钮
+4. 按顺序下载生成的所有二维码图片
 
 ### 解码二维码
 
-1. 将二维码图片拖拽到解码区域，或点击区域选择文件
-2. 系统会自动识别并显示二维码中的内容
-3. 如果内容经过压缩，系统会自动解压显示
-
-## 部署说明
-
-本项目使用 Cloudflare Pages 进行部署，具有以下优势：
-
-- 全球 CDN 加速
-- 自动 HTTPS
-- 零配置部署
-- 持续集成/持续部署 (CI/CD)
-
-### 部署步骤
-
-1. Fork 本仓库到你的 GitHub 账号
-2. 登录 Cloudflare Dashboard
-3. 进入 Pages 页面
-4. 点击 "Create a project"
-5. 选择 "Connect to Git"
-6. 选择你 fork 的仓库
-7. 配置部署选项：
-   - Framework preset: None
-   - Build command: 留空
-   - Build output directory: /
-   - Root directory: /
-8. 点击 "Save and Deploy"
-
-部署完成后，Cloudflare Pages 会自动为你的项目分配一个域名，格式为 `项目名.pages.dev`
+1. 打开解码工具页面
+2. 按照生成顺序上传二维码图片
+3. 等待系统自动处理并显示结果
+4. 所有二维码处理完成后会自动显示完整内容
 
 ## 注意事项
 
-- 根据文本长度选择合适的二维码尺寸：
-  - 3000字以下：256x256
-  - 3000-5000字：512x512
-  - 5000字以上：1024x1024
-- 文本越长，建议选择更高的纠错级别（Q或H）
-- 如果生成失败，可以尝试增加二维码尺寸或降低纠错级别
-- 解码时请确保二维码图片清晰可见，系统会自动尝试多种尺寸进行识别
-- 如果解码失败，可以尝试重新扫描或使用更清晰的图片
+1. 生成二维码时：
+   - 文本会自动分段，每段限制在2000字符以内
+   - 请按顺序保存所有生成的二维码图片
+   - 建议使用较大尺寸以确保扫描质量
+
+2. 解码二维码时：
+   - 必须按照生成顺序处理二维码
+   - 确保图片清晰完整
+   - 等待所有二维码处理完成才能看到完整内容
+
+## 部署说明
+
+本项目为纯静态网页，可以部署在任何支持静态网站托管的平台上：
+
+1. 下载项目文件：
+   - index.html（生成器）
+   - decode.html（解码器）
+   - README.md（说明文档）
+
+2. 上传到静态托管服务：
+   - GitHub Pages
+   - Vercel
+   - Netlify
+   - 或任何支持静态网站的服务器
+
+3. 直接访问 index.html 即可开始使用
+
+## 浏览器兼容性
+
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+## 开源协议
+
+MIT License

@@ -5,150 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二维码解码工具</title>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         :root {
             --primary-color: #ff9000;
-            --primary-hover: #ffa31a;
-            --bg-dark: #1b1b1b;
-            --bg-darker: #000000;
-            --bg-input: #2b2b2b;
-            --text-light: #ffffff;
-            --text-gray: #888888;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --text-color: #2c3e50;
+            --text-gray: #666666;
+            --border-color: #e0e0e0;
+            --background-color: #f5f5f5;
+            --error-color: #ff4444;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
+            color: var(--text-color);
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: var(--bg-darker);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background-color: var(--background-color);
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
             text-align: center;
-            margin-bottom: 20px;
         }
 
         .upload-container {
-            border: 2px dashed var(--primary-color);
+            border: 2px dashed var(--border-color);
             border-radius: 8px;
             padding: 20px;
             text-align: center;
             margin-bottom: 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .upload-container:hover {
-            border-color: var(--primary-hover);
-            background-color: rgba(255, 144, 0, 0.1);
+            border-color: var(--primary-color);
+            background-color: rgba(255, 144, 0, 0.05);
         }
 
         .upload-container.dragover {
-            border-color: var(--primary-hover);
-            background-color: rgba(255, 144, 0, 0.2);
+            border-color: var(--primary-color);
+            background-color: rgba(255, 144, 0, 0.1);
         }
 
-        .input-container {
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            width: 150px;
+            text-align: center;
+        }
+
+        .preview-item img {
+            max-width: 100%;
+            max-height: 150px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .preview-item .status {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .preview-item .status.success {
+            color: #4CAF50;
+        }
+
+        .preview-item .status.error {
+            color: var(--error-color);
+        }
+
+        .preview-item .remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+        }
+
+        .input-group {
             margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-gray);
+            font-weight: 500;
         }
 
         textarea {
             width: 100%;
-            height: 150px;
-            padding: 15px;
-            background-color: var(--bg-input);
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            color: var(--text-light);
-            font-size: 16px;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
             resize: vertical;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
         }
 
         button {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            padding: 10px 20px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
-            display: block;
-            margin: 20px auto;
         }
 
         button:hover {
-            background-color: var(--primary-hover);
+            background-color: #e68200;
         }
 
         #result {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            display: none;
+            margin-top: 20px;
+        }
+
+        #error {
+            color: var(--error-color);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .info {
+            color: var(--text-gray);
+            font-size: 0.9em;
             margin-top: 20px;
             padding: 15px;
-            background-color: var(--bg-input);
+            background-color: rgba(255, 144, 0, 0.1);
             border-radius: 8px;
-            white-space: pre-wrap;
-            word-break: break-all;
+            border-left: 4px solid var(--primary-color);
         }
 
-        .error {
-            color: #ff4444;
+        #loading {
+            display: none;
+            color: var(--text-gray);
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .progress {
+            color: var(--primary-color);
+            font-weight: bold;
             margin-top: 10px;
             text-align: center;
-        }
-
-        .or-divider {
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .or-divider::before,
-        .or-divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 45%;
-            height: 1px;
-            background-color: var(--text-gray);
-        }
-
-        .or-divider::before {
-            left: 0;
-        }
-
-        .or-divider::after {
-            right: 0;
-        }
-
-        #preview {
-            max-width: 100%;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 10px 0;
-            color: var(--text-gray);
         }
     </style>
 </head>
@@ -157,27 +204,49 @@
         <h1>二维码解码工具</h1>
         
         <div class="upload-container" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFile(event)">
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFile(event)" multiple>
             <p>点击或拖放二维码图片到此处</p>
-            <img id="preview" alt="预览">
-            <div id="loading" class="loading">正在解析二维码...</div>
+            <p style="color: var(--text-gray); font-size: 0.9em;">支持多图片上传</p>
+            <div class="preview-container" id="previewContainer"></div>
+            <div id="loading">正在解析二维码...</div>
         </div>
 
         <div class="or-divider">或者</div>
 
-        <div class="input-container">
-            <textarea id="input" placeholder="粘贴二维码扫描结果..."></textarea>
+        <div class="input-group">
+            <label for="qr-text">直接输入二维码内容：</label>
+            <textarea id="qr-text" placeholder="在这里粘贴二维码扫描得到的文本内容"></textarea>
         </div>
 
-        <button onclick="decodeText()">解码</button>
-        <div id="result" style="display: none;"></div>
-        <div id="error" class="error" style="display: none;"></div>
+        <div class="button-group">
+            <button onclick="decodeQR()">解码</button>
+            <button onclick="resetSegments()">重置</button>
+        </div>
+
+        <div id="result"></div>
+        <div id="error"></div>
+
+        <div class="info">
+            <p>📝 使用说明：</p>
+            <ol>
+                <li>可以直接拖放或点击上传多个二维码图片</li>
+                <li>或者将二维码文本内容粘贴到输入框</li>
+                <li>系统会自动处理多个二维码的顺序</li>
+                <li>解码完成后会显示完整内容</li>
+                <li>如需重新开始，请点击"重置"按钮</li>
+            </ol>
+        </div>
     </div>
 
     <script>
+        // 全局变量存储分段数据
+        let segmentsData = null;
+        let expectedTotal = 0;
+        let processedImages = new Set();
+
         // 拖放处理
         const dropZone = document.getElementById('dropZone');
-        const preview = document.getElementById('preview');
+        const previewContainer = document.getElementById('previewContainer');
         const loading = document.getElementById('loading');
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -217,30 +286,54 @@
             handleFiles(event.target.files);
         }
 
+        function createPreviewItem(file) {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            
+            const img = document.createElement('img');
+            const status = document.createElement('div');
+            status.className = 'status';
+            status.textContent = '等待解码...';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove';
+            removeBtn.textContent = '×';
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                div.remove();
+            };
+
+            div.appendChild(img);
+            div.appendChild(status);
+            div.appendChild(removeBtn);
+            previewContainer.appendChild(div);
+
+            return { div, img, status };
+        }
+
         function handleFiles(files) {
-            if (files.length > 0) {
-                const file = files[0];
+            Array.from(files).forEach(file => {
                 if (!file.type.startsWith('image/')) {
                     showError('请上传图片文件');
                     return;
                 }
 
-                // 显示预览
-                preview.style.display = 'block';
-                preview.file = file;
-
+                const { div, img, status } = createPreviewItem(file);
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    preview.src = e.target.result;
+                    img.src = e.target.result;
                     // 开始解析二维码
-                    decodeQR(e.target.result);
+                    decodeImage(e.target.result, status);
                 }
                 reader.readAsDataURL(file);
-            }
+            });
         }
 
-        function decodeQR(dataUrl) {
-            loading.style.display = 'block';
+        function decodeImage(dataUrl, statusElement) {
+            statusElement.textContent = '正在解码...';
+            statusElement.className = 'status';
+            
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
@@ -265,11 +358,19 @@
                 
                 // 使用jsQR解析二维码
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
-                loading.style.display = 'none';
 
                 if (code) {
-                    document.getElementById('input').value = code.data;
-                    decodeText();
+                    // 检查是否已经处理过这个二维码
+                    if (!processedImages.has(code.data)) {
+                        processedImages.add(code.data);
+                        document.getElementById('qr-text').value = code.data;
+                        decodeQR();
+                        statusElement.textContent = '解码成功';
+                        statusElement.className = 'status success';
+                    } else {
+                        statusElement.textContent = '重复的二维码';
+                        statusElement.className = 'status error';
+                    }
                 } else {
                     // 如果解码失败，尝试不同的缩放比例
                     const scales = [0.8, 1.2, 1.5, 0.5];
@@ -284,15 +385,19 @@
                         const scaledImageData = context.getImageData(0, 0, canvas.width, canvas.height);
                         const scaledCode = jsQR(scaledImageData.data, scaledImageData.width, scaledImageData.height);
                         
-                        if (scaledCode) {
-                            document.getElementById('input').value = scaledCode.data;
-                            decodeText();
+                        if (scaledCode && !processedImages.has(scaledCode.data)) {
+                            processedImages.add(scaledCode.data);
+                            document.getElementById('qr-text').value = scaledCode.data;
+                            decodeQR();
+                            statusElement.textContent = '解码成功';
+                            statusElement.className = 'status success';
                             decoded = true;
                         }
                     }
                     
                     if (!decoded) {
-                        showError('无法识别二维码，请确保图片清晰。如果二维码内容较多，请尝试使用更大的二维码尺寸。');
+                        statusElement.textContent = '解码失败';
+                        statusElement.className = 'status error';
                     }
                 }
             }
@@ -304,56 +409,109 @@
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
             document.getElementById('result').style.display = 'none';
-            loading.style.display = 'none';
         }
 
-        function decodeText() {
-            const input = document.getElementById('input').value.trim();
+        function decodeQR() {
+            const input = document.getElementById('qr-text').value.trim();
             const resultDiv = document.getElementById('result');
             const errorDiv = document.getElementById('error');
             
             if (!input) {
-                showError('请输入需要解码的内容');
+                alert('请输入二维码内容');
                 return;
             }
 
             try {
-                // 检查版本标识
-                if (!input.startsWith('v1:')) {
-                    throw new Error('无效的编码格式');
-                }
-
-                // 移除版本标识
-                const base64 = input.slice(3)
-                    .replace(/-/g, '+')
-                    .replace(/_/g, '/');
-
-                // 添加回 base64 填充
-                let paddedBase64 = base64;
-                while (paddedBase64.length % 4) {
-                    paddedBase64 += '=';
-                }
-
-                // 解码 base64
-                const binaryStr = atob(paddedBase64);
-                const bytes = new Uint8Array(binaryStr.length);
-                for (let i = 0; i < binaryStr.length; i++) {
-                    bytes[i] = binaryStr.charCodeAt(i);
-                }
-
-                // GZIP 解压缩
-                const decompressed = pako.ungzip(bytes);
+                let decodedText = '';
+                console.log('原始输入:', input);
                 
-                // 转换回文本
-                const textDecoder = new TextDecoder();
-                const originalText = textDecoder.decode(decompressed);
+                const version = input.substring(0, 2);
+                console.log('版本:', version);
+                
+                const content = input.substring(2);  
+                console.log('内容:', content);
 
-                resultDiv.textContent = originalText;
+                if (version === 'v1') {
+                    // GZIP 格式
+                    const base64 = content
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    const binaryString = atob(base64);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const inflated = pako.inflate(bytes);
+                    decodedText = new TextDecoder().decode(inflated);
+                } else if (version === 'v2') {
+                    // 单段 LZ-string 格式
+                    decodedText = LZString.decompressFromEncodedURIComponent(content);
+                } else if (version === 'v3') {
+                    // 分段 LZ-string 格式
+                    const currentSegment = parseInt(content.substring(0, 2));
+                    const totalSegments = parseInt(content.substring(2, 4));
+                    const segmentData = content.substring(4);
+
+                    console.log('当前段号:', currentSegment);
+                    console.log('总段数:', totalSegments);
+                    console.log('段数据长度:', segmentData.length);
+
+                    // 初始化或重置分段数据
+                    if (!segmentsData || expectedTotal !== totalSegments) {
+                        console.log('初始化分段数组，总段数:', totalSegments);
+                        segmentsData = new Array(totalSegments).fill(null);
+                        expectedTotal = totalSegments;
+                    }
+
+                    // 保存当前分段
+                    console.log('保存段数据到索引:', currentSegment - 1);
+                    segmentsData[currentSegment - 1] = segmentData;
+
+                    // 输出当前所有段的状态
+                    console.log('当前分段状态:', segmentsData.map((seg, i) => seg ? `段${i + 1}:已收集` : `段${i + 1}:未收集`));
+
+                    // 检查是否所有分段都已收集
+                    const missingSegments = segmentsData
+                        .map((seg, i) => seg === null ? i + 1 : null)
+                        .filter(x => x !== null);
+
+                    if (missingSegments.length > 0) {
+                        console.log('缺少的段:', missingSegments);
+                        decodedText = `已收集 ${totalSegments - missingSegments.length} 个分段，还缺少以下分段：${missingSegments.join(', ')}`;
+                    } else {
+                        // 所有分段都已收集，进行解码
+                        console.log('所有分段已收集，开始合并');
+                        const fullData = segmentsData.join('');
+                        console.log('合并后数据长度:', fullData.length);
+                        decodedText = LZString.decompressFromEncodedURIComponent(fullData);
+                        // 解码成功后清理数据
+                        segmentsData = null;
+                        expectedTotal = 0;
+                    }
+                } else {
+                    throw new Error('不支持的版本格式：' + version);
+                }
+
+                resultDiv.textContent = decodedText;
                 resultDiv.style.display = 'block';
                 errorDiv.style.display = 'none';
             } catch (error) {
-                showError('解码失败：' + error.message);
+                console.error('解码出错:', error);
+                errorDiv.textContent = '解码失败：' + error.message;
+                errorDiv.style.display = 'block';
+                resultDiv.style.display = 'none';
             }
+        }
+
+        function resetSegments() {
+            segmentsData = null;
+            expectedTotal = 0;
+            processedImages.clear();
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('qr-text').value = '';
+            previewContainer.innerHTML = '';
+            alert('已重置所有数据');
         }
     </script>
 </body>
