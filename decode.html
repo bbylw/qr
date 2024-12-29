@@ -245,9 +245,22 @@
             img.onload = function() {
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                context.drawImage(img, 0, 0);
+                
+                // 调整canvas大小以匹配图片
+                const maxSize = 2048;
+                let width = img.width;
+                let height = img.height;
+                
+                // 如果图片太大，按比例缩小
+                if (width > maxSize || height > maxSize) {
+                    const ratio = Math.min(maxSize / width, maxSize / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                context.drawImage(img, 0, 0, width, height);
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                 
                 // 使用jsQR解析二维码
@@ -258,7 +271,29 @@
                     document.getElementById('input').value = code.data;
                     decodeText();
                 } else {
-                    showError('无法识别二维码，请确保图片清晰');
+                    // 如果解码失败，尝试不同的缩放比例
+                    const scales = [0.8, 1.2, 1.5, 0.5];
+                    let decoded = false;
+                    
+                    for (let scale of scales) {
+                        if (decoded) break;
+                        
+                        canvas.width = width * scale;
+                        canvas.height = height * scale;
+                        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const scaledImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const scaledCode = jsQR(scaledImageData.data, scaledImageData.width, scaledImageData.height);
+                        
+                        if (scaledCode) {
+                            document.getElementById('input').value = scaledCode.data;
+                            decodeText();
+                            decoded = true;
+                        }
+                    }
+                    
+                    if (!decoded) {
+                        showError('无法识别二维码，请确保图片清晰。如果二维码内容较多，请尝试使用更大的二维码尺寸。');
+                    }
                 }
             }
             img.src = dataUrl;

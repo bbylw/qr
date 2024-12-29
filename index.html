@@ -400,6 +400,26 @@
             <div class="char-count">字符数：<span id="charCount">0</span></div>
         </div>
 
+        <div class="controls">
+            <div class="size-control">
+                <label for="size">二维码大小：</label>
+                <select id="size">
+                    <option value="256">256x256</option>
+                    <option value="512">512x512</option>
+                    <option value="1024">1024x1024</option>
+                </select>
+            </div>
+            <div class="size-control">
+                <label for="level">纠错等级：</label>
+                <select id="level">
+                    <option value="L">低</option>
+                    <option value="M">中</option>
+                    <option value="Q">高</option>
+                    <option value="H">最高</option>
+                </select>
+            </div>
+        </div>
+
         <div class="button-group">
             <button id="generate-btn" onclick="generateQR()">生成二维码</button>
             <button id="download-btn" onclick="downloadQR()" style="display: none;">下载二维码</button>
@@ -446,11 +466,11 @@
                 // 生成二维码
                 new QRCode(qrContainer, {
                     text: finalText,
-                    width: 256,
-                    height: 256,
+                    width: document.getElementById('size').value,
+                    height: document.getElementById('size').value,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L
+                    correctLevel: QRCode.CorrectLevel[document.getElementById('level').value]
                 });
 
                 // 添加压缩信息
