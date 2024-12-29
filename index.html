@@ -1,810 +1,882 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>超长文本二维码生成器</title>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.0.3/dist/pako.min.js"></script>
     <script src="https://unpkg.com/jszip@3.7.1/dist/jszip.min.js"></script>
     <style>
-        :root {
-            --primary-color: #ff9000;
-            --primary-hover: #ffa31a;
-            --bg-dark: #1b1b1b;
-            --bg-darker: #000000;
-            --bg-input: #2b2b2b;
-            --text-light: #ffffff;
-            --text-gray: #888888;
-        }
+      :root {
+        --primary-color: #ff9000;
+        --primary-hover: #ffa31a;
+        --bg-dark: #1b1b1b;
+        --bg-darker: #000000;
+        --bg-input: #2b2b2b;
+        --text-light: #ffffff;
+        --text-gray: #888888;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-light);
+        line-height: 1.6;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: var(--bg-darker);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        text-align: center;
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.5px;
+      }
+
+      .logo-text {
+        background-color: var(--primary-color);
+        color: var(--bg-darker);
+        padding: 0.2em 0.4em;
+        border-radius: 6px;
+        font-weight: 800;
+        text-transform: uppercase;
+        display: inline-block;
+        transform: skew(-5deg);
+        transition: transform 0.3s ease;
+      }
+
+      .logo-text:hover {
+        transform: skew(-5deg) scale(1.05);
+      }
+
+      .description {
+        color: var(--text-gray);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: clamp(0.9rem, 2vw, 1.1rem);
+      }
+
+      .input-container {
+        margin-bottom: 1.5rem;
+      }
+
+      textarea {
+        width: 100%;
+        height: clamp(200px, 40vh, 400px);
+        padding: 15px;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        resize: vertical;
+        background-color: var(--bg-input);
+        color: var(--text-light);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(255, 144, 0, 0.3);
+      }
+
+      .char-count {
+        margin-top: 0.5rem;
+        color: var(--text-gray);
+        font-size: 0.9rem;
+      }
+
+      .controls {
+        margin: 1.5rem 0;
+        background-color: var(--bg-input);
+        padding: 1.2rem;
+        border-radius: 8px;
+        display: grid;
+        gap: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .controls {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .size-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      select {
+        background-color: var(--bg-input);
+        color: var(--text-light);
+        border: 2px solid var(--primary-color);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        flex: 1;
+        min-width: 120px;
+        transition: all 0.3s ease;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--primary-hover);
+        box-shadow: 0 0 10px rgba(255, 144, 0, 0.2);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin: 1.5rem 0;
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: var(--bg-darker);
+        border: none;
+        padding: 12px 25px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        flex: 1;
+        min-width: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 144, 0, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      #qrcode-container {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background-color: var(--text-light);
+        border-radius: 8px;
+        display: none;
+      }
+
+      .info-box {
+        background-color: var(--bg-input);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        color: var(--text-light);
+      }
+
+      .info-box-title {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
+      .info-box-item {
+        margin: 10px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .info-box-label {
+        color: var(--text-light);
+      }
+
+      .info-box-value {
+        color: var(--primary-color);
+        font-weight: bold;
+      }
+
+      .usage-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .usage-list-item {
+        margin: 8px 0;
+        color: var(--text-light);
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .usage-list-item:before {
+        content: "•";
+        color: var(--primary-color);
+        margin-right: 10px;
+      }
+
+      .error {
+        color: #ff4444;
+        margin-top: 1rem;
+        padding: 10px;
+        border-radius: 6px;
+        background-color: rgba(255, 68, 68, 0.1);
+        display: none;
+      }
+
+      .error:not(:empty) {
+        display: block;
+      }
+
+      @media (max-width: 480px) {
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            line-height: 1.6;
-            padding: 20px;
+          padding: 0;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: var(--bg-darker);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            text-align: center;
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            margin-bottom: 1.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        .logo-text {
-            background-color: var(--primary-color);
-            color: var(--bg-darker);
-            padding: 0.2em 0.4em;
-            border-radius: 6px;
-            font-weight: 800;
-            text-transform: uppercase;
-            display: inline-block;
-            transform: skew(-5deg);
-            transition: transform 0.3s ease;
-        }
-
-        .logo-text:hover {
-            transform: skew(-5deg) scale(1.05);
-        }
-
-        .description {
-            color: var(--text-gray);
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: clamp(0.9rem, 2vw, 1.1rem);
-        }
-
-        .input-container {
-            margin-bottom: 1.5rem;
-        }
-
-        textarea {
-            width: 100%;
-            height: clamp(200px, 40vh, 400px);
-            padding: 15px;
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            resize: vertical;
-            background-color: var(--bg-input);
-            color: var(--text-light);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 15px rgba(255, 144, 0, 0.3);
-        }
-
-        .char-count {
-            margin-top: 0.5rem;
-            color: var(--text-gray);
-            font-size: 0.9rem;
-        }
-
-        .controls {
-            margin: 1.5rem 0;
-            background-color: var(--bg-input);
-            padding: 1.2rem;
-            border-radius: 8px;
-            display: grid;
-            gap: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .controls {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .size-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        select {
-            background-color: var(--bg-input);
-            color: var(--text-light);
-            border: 2px solid var(--primary-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            flex: 1;
-            min-width: 120px;
-            transition: all 0.3s ease;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--primary-hover);
-            box-shadow: 0 0 10px rgba(255, 144, 0, 0.2);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin: 1.5rem 0;
+          padding: 0;
         }
 
         button {
-            background-color: var(--primary-color);
-            color: var(--bg-darker);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+          width: 100%;
         }
 
-        button:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 144, 0, 0.3);
+        .size-control {
+          flex-direction: column;
+          align-items: stretch;
         }
+      }
 
-        button:active {
-            transform: translateY(0);
-        }
+      .qr-part {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid var(--text-gray);
+        border-radius: 8px;
+        background: #ffffff;
+      }
 
-        #qrcode-container {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background-color: var(--text-light);
-            border-radius: 8px;
-            display: none;
-        }
+      .qr-title {
+        margin-bottom: 10px;
+        color: var(--text-color);
+        font-size: 16px;
+        font-weight: bold;
+      }
 
-        .info-box {
-            background-color: var(--bg-input);
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            color: var(--text-light);
-        }
+      .qr-part-info {
+        font-size: 14px;
+        color: var(--text-gray);
+        margin-top: 5px;
+      }
 
-        .info-box-title {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
+      .qr-code {
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+      }
 
-        .info-box-item {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .info-box {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        background-color: rgba(255, 144, 0, 0.1);
+        color: var(--text-gray);
+      }
 
-        .info-box-label {
-            color: var(--text-light);
-        }
+      .info-title {
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
 
-        .info-box-value {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
+      .info-item {
+        margin-bottom: 5px;
+      }
 
-        .usage-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+      .info-item:last-child {
+        margin-bottom: 0;
+      }
 
-        .usage-list-item {
-            margin: 8px 0;
-            color: var(--text-light);
-            display: flex;
-            align-items: flex-start;
-        }
+      .qr-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
 
-        .usage-list-item:before {
-            content: "•";
-            color: var(--primary-color);
-            margin-right: 10px;
-        }
+      .qr-item {
+        text-align: center;
+      }
 
-        .error {
-            color: #ff4444;
-            margin-top: 1rem;
-            padding: 10px;
-            border-radius: 6px;
-            background-color: rgba(255, 68, 68, 0.1);
-            display: none;
-        }
+      .qr-page-number {
+        margin-top: 10px;
+        color: var(--text-gray);
+        font-size: 0.9em;
+      }
 
-        .error:not(:empty) {
-            display: block;
-        }
+      .info-box {
+        background: var(--bg-darker);
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+      }
 
-        @media (max-width: 480px) {
-            body {
-                padding: 0;
-            }
+      .info-box h2 {
+        color: var(--primary-color);
+        font-size: 1.2em;
+        margin: 0 0 15px 0;
+      }
 
-            .container {
-                padding: 0;
-            }
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-            button {
-                width: 100%;
-            }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-            .size-control {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
+      .step-number {
+        background: var(--primary-color);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9em;
+        flex-shrink: 0;
+      }
 
-        .qr-part {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid var(--text-gray);
-            border-radius: 8px;
-            background: #ffffff;
-        }
+      .warning {
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(255, 144, 0, 0.1);
+        border-left: 4px solid var(--primary-color);
+        border-radius: 4px;
+      }
 
-        .qr-title {
-            margin-bottom: 10px;
-            color: var(--text-color);
-            font-size: 16px;
-            font-weight: bold;
-        }
+      .decode-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: bold;
+      }
 
-        .qr-part-info {
-            font-size: 14px;
-            color: var(--text-gray);
-            margin-top: 5px;
-        }
+      .decode-link:hover {
+        color: var(--primary-hover);
+        text-decoration: underline;
+      }
 
-        .qr-code {
-            background-color: #ffffff;
-            padding: 10px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-        }
+      .compression-info {
+        background-color: #2b2b2b;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        color: #ffffff;
+      }
 
-        .info-box {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid var(--primary-color);
-            border-radius: 8px;
-            background-color: rgba(255, 144, 0, 0.1);
-            color: var(--text-gray);
-        }
+      .compression-info-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
 
-        .info-title {
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
+      .compression-info-item {
+        margin: 10px 0;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(255, 144, 0, 0.2);
+      }
 
-        .info-item {
-            margin-bottom: 5px;
-        }
+      .compression-info-item:last-child {
+        border-bottom: none;
+      }
 
-        .info-item:last-child {
-            margin-bottom: 0;
-        }
+      .compression-info-label {
+        color: #ffffff;
+        display: inline-block;
+        margin-right: 10px;
+      }
 
-        .qr-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-        
-        .qr-item {
-            text-align: center;
-        }
-        
-        .qr-page-number {
-            margin-top: 10px;
-            color: var(--text-gray);
-            font-size: 0.9em;
-        }
+      .compression-info-value {
+        color: var(--primary-color);
+        font-weight: bold;
+      }
 
-        .info-box {
-            background: var(--bg-darker);
-            border: 1px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+      .usage-info {
+        background-color: #2b2b2b;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        color: #ffffff;
+      }
 
-        .info-box h2 {
-            color: var(--primary-color);
-            font-size: 1.2em;
-            margin: 0 0 15px 0;
-        }
+      .usage-info-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
 
-        .steps {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+      .usage-info-item {
+        margin: 8px 0;
+        color: #ffffff;
+        font-size: 1rem;
+      }
 
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .step-number {
-            background: var(--primary-color);
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9em;
-            flex-shrink: 0;
-        }
-
-        .warning {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(255, 144, 0, 0.1);
-            border-left: 4px solid var(--primary-color);
-            border-radius: 4px;
-        }
-
-        .decode-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .decode-link:hover {
-            color: var(--primary-hover);
-            text-decoration: underline;
-        }
-
-        .compression-info {
-            background-color: #2b2b2b;
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #ffffff;
-        }
-
-        .compression-info-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .compression-info-item {
-            margin: 10px 0;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 144, 0, 0.2);
-        }
-
-        .compression-info-item:last-child {
-            border-bottom: none;
-        }
-
-        .compression-info-label {
-            color: #ffffff;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        .compression-info-value {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        .usage-info {
-            background-color: #2b2b2b;
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #ffffff;
-        }
-
-        .usage-info-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .usage-info-item {
-            margin: 8px 0;
-            color: #ffffff;
-            font-size: 1rem;
-        }
-
-        .compressed-content {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #1b1b1b;
-            border: 1px solid #ff9000;
-            border-radius: 4px;
-        }
-        .compressed-content h3 {
-            color: #ff9000;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .compressed-content textarea {
-            width: 100%;
-            min-height: 60px;
-            background-color: #2b2b2b;
-            color: #ffffff;
-            border: 1px solid #ff9000;
-            padding: 8px;
-            font-family: monospace;
-            resize: vertical;
-        }
-        .copy-button {
-            background-color: #ff9000;
-            color: #000000;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .copy-button:hover {
-            background-color: #ffa533;
-        }
-        .copy-success {
-            color: #00ff00;
-            margin-left: 10px;
-            display: none;
-        }
+      .compressed-content {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #1b1b1b;
+        border: 1px solid #ff9000;
+        border-radius: 4px;
+      }
+      .compressed-content h3 {
+        color: #ff9000;
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+      .compressed-content textarea {
+        width: 100%;
+        min-height: 60px;
+        background-color: #2b2b2b;
+        color: #ffffff;
+        border: 1px solid #ff9000;
+        padding: 8px;
+        font-family: monospace;
+        resize: vertical;
+      }
+      .copy-button {
+        background-color: #ff9000;
+        color: #000000;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      .copy-button:hover {
+        background-color: #ffa533;
+      }
+      .copy-success {
+        color: #00ff00;
+        margin-left: 10px;
+        display: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1><span class="logo-text">QR</span>码生成器</h1>
+      <h1><span class="logo-text">QR</span>码生成器</h1>
 
-        <!-- 添加使用说明 -->
-        <div class="info-box">
-            <h2 class="info-box-title">📝 使用说明</h2>
-            <div class="steps">
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <span>在下方输入框中输入要转换的文本内容</span>
-                </div>
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <span>点击"生成二维码"按钮生成压缩编码的二维码</span>
-                </div>
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <span>下载或保存生成的二维码图片</span>
-                </div>
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <span>使用我们的解码工具解码查看原文（<a href="decode.html" class="decode-link" target="_blank">打开解码工具</a>）</span>
-                </div>
-            </div>
-            <div class="warning">
-                ⚠️ 重要提示：本工具生成的二维码采用特殊压缩编码，普通扫码器扫描后需要通过我们的解码工具才能查看原文。
-            </div>
+      <!-- 添加使用说明 -->
+      <div class="info-box">
+        <h2 class="info-box-title">📝 使用说明</h2>
+        <div class="steps">
+          <div class="step">
+            <span class="step-number">1</span>
+            <span>在下方输入框中输入要转换的文本内容</span>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <span>点击"生成二维码"按钮生成压缩编码的二维码</span>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <span>下载或保存生成的二维码图片</span>
+          </div>
+          <div class="step">
+            <span class="step-number">4</span>
+            <span
+              >使用我们的解码工具解码查看原文（<a
+                href="decode.html"
+                class="decode-link"
+                target="_blank"
+                >打开解码工具</a
+              >）</span
+            >
+          </div>
         </div>
+        <div class="warning">
+          ⚠️
+          重要提示：本工具生成的二维码采用特殊压缩编码，普通扫码器扫描后需要通过我们的解码工具才能查看原文。
+        </div>
+      </div>
 
-        <p class="description">支持生成超长文本内容的二维码，可用于网址或任意文本内容</p>
-        
-        <div class="input-container">
-            <textarea id="text" placeholder="请输入要生成二维码的文本内容..." oninput="updateCharCount()"></textarea>
-            <div class="char-count">字符数：<span id="charCount">0</span></div>
-        </div>
+      <p class="description">
+        支持生成超长文本内容的二维码，可用于网址或任意文本内容
+      </p>
 
-        <div class="controls">
-            <div class="size-control">
-                <label for="size">二维码大小：</label>
-                <select id="size">
-                    <option value="256">256x256</option>
-                    <option value="512">512x512</option>
-                    <option value="1024">1024x1024</option>
-                </select>
-            </div>
-            <div class="size-control">
-                <label for="level">纠错等级：</label>
-                <select id="level">
-                    <option value="L">低</option>
-                    <option value="M">中</option>
-                    <option value="Q">高</option>
-                    <option value="H">最高</option>
-                </select>
-            </div>
-        </div>
+      <div class="input-container">
+        <textarea
+          id="text"
+          placeholder="请输入要生成二维码的文本内容..."
+          oninput="updateCharCount()"
+        ></textarea>
+        <div class="char-count">字符数：<span id="charCount">0</span></div>
+      </div>
 
-        <div class="button-group">
-            <button id="generate-btn" onclick="generateQR()">生成二维码</button>
+      <div class="controls">
+        <div class="size-control">
+          <label for="size">二维码大小：</label>
+          <select id="size">
+            <option value="256">256x256</option>
+            <option value="512">512x512</option>
+            <option value="1024">1024x1024</option>
+          </select>
         </div>
+        <div class="size-control">
+          <label for="level">纠错等级：</label>
+          <select id="level">
+            <option value="L">低</option>
+            <option value="M">中</option>
+            <option value="Q">高</option>
+            <option value="H">最高</option>
+          </select>
+        </div>
+      </div>
 
-        <div id="qrcode-container">
-            <div id="qrcode"></div>
-            <div class="compression-info">
-                <div class="compression-info-title">压缩统计</div>
-                <div class="compression-info-item">
-                    <span class="compression-info-label">原始文本：</span>
-                    <span class="compression-info-value"><span id="originalLength">0</span> 字符</span>
-                </div>
-                <div class="compression-info-item">
-                    <span class="compression-info-label">压缩后：</span>
-                    <span class="compression-info-value"><span id="compressedLength">0</span> 字符</span>
-                </div>
-                <div class="compression-info-item">
-                    <span class="compression-info-label">压缩率：</span>
-                    <span class="compression-info-value"><span id="compressionRatio">0</span>%</span>
-                </div>
-            </div>
-            <div class="compression-info">
-                <div class="compression-info-title">分段信息</div>
-                <div class="compression-info-item">
-                    <span class="compression-info-label">总段数：</span>
-                    <span class="compression-info-value"><span id="totalSegments">0</span></span>
-                </div>
-                <div class="compression-info-item">
-                    <span class="compression-info-label">每段大小限制：</span>
-                    <span class="compression-info-value">2000 字符</span>
-                </div>
-            </div>
-            <div class="usage-info">
-                <div class="usage-info-title">使用说明</div>
-                <ul class="usage-list">
-                    <li class="usage-list-item">1. 请按顺序保存所有二维码图片</li>
-                    <li class="usage-list-item">2. 使用解码工具时，需要按顺序处理所有二维码</li>
-                    <li class="usage-list-item">3. 确保扫描时二维码图片清晰完整</li>
-                    <li class="usage-list-item">4. 所有二维码处理完成后，将自动显示完整内容</li>
-                </ul>
-            </div>
+      <div class="button-group">
+        <button id="generate-btn" onclick="generateQR()">生成二维码</button>
+      </div>
+
+      <div id="qrcode-container">
+        <div id="qrcode"></div>
+        <div class="compression-info">
+          <div class="compression-info-title">压缩统计</div>
+          <div class="compression-info-item">
+            <span class="compression-info-label">原始文本：</span>
+            <span class="compression-info-value"
+              ><span id="originalLength">0</span> 字符</span
+            >
+          </div>
+          <div class="compression-info-item">
+            <span class="compression-info-label">压缩后：</span>
+            <span class="compression-info-value"
+              ><span id="compressedLength">0</span> 字符</span
+            >
+          </div>
+          <div class="compression-info-item">
+            <span class="compression-info-label">压缩率：</span>
+            <span class="compression-info-value"
+              ><span id="compressionRatio">0</span>%</span
+            >
+          </div>
         </div>
-        <div id="compressed-content" class="compressed-content" style="display: none;">
-            <h3>压缩后的内容（可直接用于解码）：</h3>
-            <textarea id="compressed-text" readonly></textarea>
-            <button class="copy-button" onclick="copyCompressedContent()">复制内容</button>
-            <span id="copy-success" class="copy-success">复制成功!</span>
+        <div class="compression-info">
+          <div class="compression-info-title">分段信息</div>
+          <div class="compression-info-item">
+            <span class="compression-info-label">总段数：</span>
+            <span class="compression-info-value"
+              ><span id="totalSegments">0</span></span
+            >
+          </div>
+          <div class="compression-info-item">
+            <span class="compression-info-label">每段大小限制：</span>
+            <span class="compression-info-value">2000 字符</span>
+          </div>
         </div>
+        <div class="usage-info">
+          <div class="usage-info-title">使用说明</div>
+          <ul class="usage-list">
+            <li class="usage-list-item">1. 请按顺序保存所有二维码图片</li>
+            <li class="usage-list-item">
+              2. 使用解码工具时，需要按顺序处理所有二维码
+            </li>
+            <li class="usage-list-item">3. 确保扫描时二维码图片清晰完整</li>
+            <li class="usage-list-item">
+              4. 所有二维码处理完成后，将自动显示完整内容
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        id="compressed-content"
+        class="compressed-content"
+        style="display: none"
+      >
+        <h3>压缩后的内容（可直接用于解码）：</h3>
+        <textarea id="compressed-text" readonly></textarea>
+        <button class="copy-button" onclick="copyCompressedContent()">
+          复制内容
+        </button>
+        <span id="copy-success" class="copy-success">复制成功!</span>
+      </div>
     </div>
 
     <script>
-        function calculateQRParams(textLength) {
-            // 固定使用最大版本和最低纠错级别，确保最大数据容量
-            const typeNumber = 40;
-            const errorCorrectionLevel = 'L';
+      function calculateQRParams(textLength) {
+        // 固定使用最大版本和最低纠错级别，确保最大数据容量
+        const typeNumber = 40;
+        const errorCorrectionLevel = "L";
 
-            // 固定使用较大尺寸，确保扫描质量
-            const size = 800;  // 使用固定的大尺寸
+        // 使用较小的显示尺寸，但下载时保持大尺寸
+        const displaySize = 200; // 显示尺寸改为200
+        const downloadSize = 800; // 下载尺寸保持800
 
-            return {
-                typeNumber,
-                errorCorrectionLevel,
-                size
-            };
+        return {
+          typeNumber,
+          errorCorrectionLevel,
+          displaySize,
+          downloadSize,
+        };
+      }
+
+      async function generateQR() {
+        const text = document.getElementById("text").value;
+        const qrcodeContainer = document.getElementById("qrcode-container");
+        qrcodeContainer.innerHTML = "";
+        qrcodeContainer.style.display = "block";
+
+        if (!text) {
+          qrcodeContainer.innerHTML =
+            '<div style="color: red;">请输入要生成二维码的文本内容</div>';
+          return;
         }
 
-        async function generateQR() {
-            const text = document.getElementById('text').value;
-            const qrcodeContainer = document.getElementById('qrcode-container');
-            qrcodeContainer.innerHTML = '';
-            qrcodeContainer.style.display = 'block';
+        try {
+          // 压缩文本
+          const compressed = LZString.compressToEncodedURIComponent(text);
 
-            if (!text) {
-                qrcodeContainer.innerHTML = '<div style="color: red;">请输入要生成二维码的文本内容</div>';
-                return;
+          // 降低单段数据量以提高可靠性
+          const MAX_LENGTH = 2000; // 进一步降低单段数据量
+          const segments = [];
+
+          // 分段
+          for (let i = 0; i < compressed.length; i += MAX_LENGTH) {
+            segments.push(compressed.slice(i, i + MAX_LENGTH));
+          }
+
+          // 创建进度提示
+          const progressInfo = document.createElement("div");
+          progressInfo.style.marginBottom = "20px";
+          progressInfo.style.color = "#fff";
+          progressInfo.textContent = `正在生成 ${segments.length} 个二维码...`;
+          qrcodeContainer.appendChild(progressInfo);
+
+          // 生成二维码
+          for (let i = 0; i < segments.length; i++) {
+            const segmentText = `v3${(i + 1)
+              .toString()
+              .padStart(2, "0")}${segments.length.toString().padStart(2, "0")}${
+              segments[i]
+            }`;
+
+            // 使用固定参数
+            const params = calculateQRParams(segmentText.length);
+
+            // 创建容器
+            const container = document.createElement("div");
+            container.style.marginBottom = "30px";
+            container.style.textAlign = "center";
+            container.style.backgroundColor = "#2b2b2b";
+            container.style.padding = "20px";
+            container.style.borderRadius = "8px";
+            container.style.border = "1px solid #ff9000";
+
+            // 添加标题
+            const title = document.createElement("div");
+            title.style.marginBottom = "15px";
+            title.style.fontSize = "16px";
+            title.style.fontWeight = "bold";
+            title.style.color = "#fff";
+            title.textContent = `第 ${i + 1} 段（共 ${segments.length} 段）`;
+            container.appendChild(title);
+
+            // 添加二维码容器
+            const qrDiv = document.createElement("div");
+            qrDiv.style.backgroundColor = "#fff";
+            qrDiv.style.padding = "20px"; // 减小内边距
+            qrDiv.style.borderRadius = "4px";
+            qrDiv.style.display = "inline-block";
+            container.appendChild(qrDiv);
+
+            // 添加信息
+            const info = document.createElement("div");
+            info.style.marginTop = "10px";
+            info.style.fontSize = "14px";
+            info.style.color = "#fff";
+            info.textContent = `内容长度: ${segmentText.length} 字符`;
+            container.appendChild(info);
+
+            // 添加下载按钮
+            const downloadBtn = document.createElement("button");
+            downloadBtn.textContent = "下载此二维码";
+            downloadBtn.style.marginTop = "15px";
+            downloadBtn.style.fontSize = "14px";
+            downloadBtn.style.padding = "8px 16px";
+            downloadBtn.style.backgroundColor = "#ff9000";
+            downloadBtn.style.color = "#fff";
+            downloadBtn.style.border = "none";
+            downloadBtn.style.borderRadius = "4px";
+            downloadBtn.style.cursor = "pointer";
+            container.appendChild(downloadBtn);
+
+            // 生成二维码（显示尺寸）
+            try {
+              const qr = new QRCode(qrDiv, {
+                text: segmentText,
+                width: params.displaySize,
+                height: params.displaySize,
+                typeNumber: params.typeNumber,
+                correctLevel: QRCode.CorrectLevel[params.errorCorrectionLevel],
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+              });
+
+              // 更新进度
+              progressInfo.textContent = `已生成 ${i + 1} / ${
+                segments.length
+              } 个二维码`;
+
+              // 设置下载事件
+              downloadBtn.onclick = () => {
+                // 创建一个临时的div用于生成下载用的大尺寸二维码
+                const tempDiv = document.createElement("div");
+                tempDiv.style.display = "none";
+                document.body.appendChild(tempDiv);
+
+                // 生成大尺寸二维码
+                const downloadQR = new QRCode(tempDiv, {
+                  text: segmentText,
+                  width: params.downloadSize,
+                  height: params.downloadSize,
+                  typeNumber: params.typeNumber,
+                  correctLevel:
+                    QRCode.CorrectLevel[params.errorCorrectionLevel],
+                  colorDark: "#000000",
+                  colorLight: "#ffffff",
+                });
+
+                // 等待二维码生成完成
+                setTimeout(() => {
+                  const canvas = tempDiv.querySelector("canvas");
+                  if (canvas) {
+                    // 创建一个新的canvas，添加白色边距
+                    const newCanvas = document.createElement("canvas");
+                    const padding = 100; // 边距像素
+                    newCanvas.width = canvas.width + padding * 2;
+                    newCanvas.height = canvas.height + padding * 2;
+                    const ctx = newCanvas.getContext("2d");
+
+                    // 填充白色背景
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
+
+                    // 在中间绘制原始二维码
+                    ctx.drawImage(canvas, padding, padding);
+
+                    // 下载带边距的二维码
+                    const url = newCanvas.toDataURL("image/png");
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `qrcode-${i + 1}-of-${segments.length}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    // 清理临时元素
+                    document.body.removeChild(tempDiv);
+                  }
+                }, 100);
+              };
+            } catch (qrError) {
+              console.error(`生成第 ${i + 1} 个二维码时出错:`, qrError);
+              const errorDiv = document.createElement("div");
+              errorDiv.style.color = "#ff4444";
+              errorDiv.style.marginTop = "10px";
+              errorDiv.textContent = `生成失败: ${qrError.message}`;
+              container.appendChild(errorDiv);
             }
 
-            try {
-                // 压缩文本
-                const compressed = LZString.compressToEncodedURIComponent(text);
-                
-                // 降低单段数据量以提高可靠性
-                const MAX_LENGTH = 2000;  // 进一步降低单段数据量
-                const segments = [];
-                
-                // 分段
-                for (let i = 0; i < compressed.length; i += MAX_LENGTH) {
-                    segments.push(compressed.slice(i, i + MAX_LENGTH));
-                }
+            qrcodeContainer.appendChild(container);
+          }
 
-                // 创建进度提示
-                const progressInfo = document.createElement('div');
-                progressInfo.style.marginBottom = '20px';
-                progressInfo.style.color = '#fff';
-                progressInfo.textContent = `正在生成 ${segments.length} 个二维码...`;
-                qrcodeContainer.appendChild(progressInfo);
-                
-                // 生成二维码
-                for (let i = 0; i < segments.length; i++) {
-                    const segmentText = `v3${(i + 1).toString().padStart(2, '0')}${segments.length.toString().padStart(2, '0')}${segments[i]}`;
-                    
-                    // 使用固定参数
-                    const params = calculateQRParams(segmentText.length);
-                    
-                    // 创建容器
-                    const container = document.createElement('div');
-                    container.style.marginBottom = '30px';
-                    container.style.textAlign = 'center';
-                    container.style.backgroundColor = '#2b2b2b';
-                    container.style.padding = '20px';
-                    container.style.borderRadius = '8px';
-                    container.style.border = '1px solid #ff9000';
-                    
-                    // 添加标题
-                    const title = document.createElement('div');
-                    title.style.marginBottom = '15px';
-                    title.style.fontSize = '16px';
-                    title.style.fontWeight = 'bold';
-                    title.style.color = '#fff';
-                    title.textContent = `第 ${i + 1} 段（共 ${segments.length} 段）`;
-                    container.appendChild(title);
-                    
-                    // 添加二维码容器
-                    const qrDiv = document.createElement('div');
-                    qrDiv.style.backgroundColor = '#fff';
-                    qrDiv.style.padding = '40px';
-                    qrDiv.style.borderRadius = '4px';
-                    qrDiv.style.display = 'inline-block';
-                    container.appendChild(qrDiv);
-                    
-                    // 添加信息
-                    const info = document.createElement('div');
-                    info.style.marginTop = '10px';
-                    info.style.fontSize = '14px';
-                    info.style.color = '#fff';
-                    info.textContent = `内容长度: ${segmentText.length} 字符`;
-                    container.appendChild(info);
-                    
-                    // 添加下载按钮
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.textContent = '下载此二维码';
-                    downloadBtn.style.marginTop = '15px';
-                    downloadBtn.style.fontSize = '14px';
-                    downloadBtn.style.padding = '8px 16px';
-                    downloadBtn.style.backgroundColor = '#ff9000';
-                    downloadBtn.style.color = '#fff';
-                    downloadBtn.style.border = 'none';
-                    downloadBtn.style.borderRadius = '4px';
-                    downloadBtn.style.cursor = 'pointer';
-                    container.appendChild(downloadBtn);
-                    
-                    // 生成二维码
-                    try {
-                        const qr = new QRCode(qrDiv, {
-                            text: segmentText,
-                            width: params.size,
-                            height: params.size,
-                            typeNumber: params.typeNumber,
-                            correctLevel: QRCode.CorrectLevel[params.errorCorrectionLevel],
-                            colorDark: "#000000",
-                            colorLight: "#ffffff"
-                        });
+          // 移除进度提示
+          progressInfo.remove();
 
-                        // 更新进度
-                        progressInfo.textContent = `已生成 ${i + 1} / ${segments.length} 个二维码`;
-                        
-                        // 设置下载事件
-                        downloadBtn.onclick = () => {
-                            const canvas = qrDiv.querySelector('canvas');
-                            if (canvas) {
-                                // 创建一个新的canvas，添加白色边距
-                                const newCanvas = document.createElement('canvas');
-                                const padding = 100; // 边距像素
-                                newCanvas.width = canvas.width + (padding * 2);
-                                newCanvas.height = canvas.height + (padding * 2);
-                                const ctx = newCanvas.getContext('2d');
-                                
-                                // 填充白色背景
-                                ctx.fillStyle = '#FFFFFF';
-                                ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
-                                
-                                // 在中间绘制原始二维码
-                                ctx.drawImage(canvas, padding, padding);
-                                
-                                // 下载带边距的二维码
-                                const url = newCanvas.toDataURL('image/png');
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `qrcode-${i + 1}-of-${segments.length}.png`;
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                            }
-                        };
-                    } catch (qrError) {
-                        console.error(`生成第 ${i + 1} 个二维码时出错:`, qrError);
-                        const errorDiv = document.createElement('div');
-                        errorDiv.style.color = '#ff4444';
-                        errorDiv.style.marginTop = '10px';
-                        errorDiv.textContent = `生成失败: ${qrError.message}`;
-                        container.appendChild(errorDiv);
-                    }
-                    
-                    qrcodeContainer.appendChild(container);
-                }
+          // 显示统计信息
+          const statsContainer = document.createElement("div");
+          statsContainer.style.marginTop = "30px";
+          statsContainer.style.padding = "20px";
+          statsContainer.style.backgroundColor = "#2b2b2b";
+          statsContainer.style.borderRadius = "8px";
+          statsContainer.style.border = "1px solid #ff9000";
+          statsContainer.style.color = "#fff";
 
-                // 移除进度提示
-                progressInfo.remove();
-
-                // 显示统计信息
-                const statsContainer = document.createElement('div');
-                statsContainer.style.marginTop = '30px';
-                statsContainer.style.padding = '20px';
-                statsContainer.style.backgroundColor = '#2b2b2b';
-                statsContainer.style.borderRadius = '8px';
-                statsContainer.style.border = '1px solid #ff9000';
-                statsContainer.style.color = '#fff';
-
-                const compressionStats = document.createElement('div');
-                compressionStats.style.marginBottom = '15px';
-                compressionStats.innerHTML = `
+          const compressionStats = document.createElement("div");
+          compressionStats.style.marginBottom = "15px";
+          compressionStats.innerHTML = `
                     <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">压缩统计：</div>
-                    <div style="color: #fff;">原始文本：<span style="color: #ff9000; font-weight: bold;">${text.length}</span> 字符</div>
-                    <div style="color: #fff;">压缩后：<span style="color: #ff9000; font-weight: bold;">${compressed.length}</span> 字符</div>
-                    <div style="color: #fff;">压缩率：<span style="color: #ff9000; font-weight: bold;">${Math.round((compressed.length - text.length) / text.length * 100)}%</span></div>
+                    <div style="color: #fff;">原始文本：<span style="color: #ff9000; font-weight: bold;">${
+                      text.length
+                    }</span> 字符</div>
+                    <div style="color: #fff;">压缩后：<span style="color: #ff9000; font-weight: bold;">${
+                      compressed.length
+                    }</span> 字符</div>
+                    <div style="color: #fff;">压缩率：<span style="color: #ff9000; font-weight: bold;">${Math.round(
+                      ((compressed.length - text.length) / text.length) * 100
+                    )}%</span></div>
                 `;
 
-                const segmentStats = document.createElement('div');
-                segmentStats.innerHTML = `
+          const segmentStats = document.createElement("div");
+          segmentStats.innerHTML = `
                     <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">分段信息：</div>
                     <div style="color: #fff;">总段数：<span style="color: #ff9000; font-weight: bold;">${segments.length}</span></div>
                     <div style="color: #fff;">每段大小限制：<span style="color: #ff9000; font-weight: bold;">${MAX_LENGTH}</span> 字符</div>
                 `;
 
-                statsContainer.appendChild(compressionStats);
-                statsContainer.appendChild(segmentStats);
-                qrcodeContainer.appendChild(statsContainer);
+          statsContainer.appendChild(compressionStats);
+          statsContainer.appendChild(segmentStats);
+          qrcodeContainer.appendChild(statsContainer);
 
-                // 添加使用说明
-                const instructions = document.createElement('div');
-                instructions.style.marginTop = '20px';
-                instructions.style.padding = '20px';
-                instructions.style.backgroundColor = '#2b2b2b';
-                instructions.style.borderRadius = '8px';
-                instructions.style.border = '1px solid #ff9000';
-                instructions.style.color = '#fff';
-                instructions.innerHTML = `
+          // 添加使用说明
+          const instructions = document.createElement("div");
+          instructions.style.marginTop = "20px";
+          instructions.style.padding = "20px";
+          instructions.style.backgroundColor = "#2b2b2b";
+          instructions.style.borderRadius = "8px";
+          instructions.style.border = "1px solid #ff9000";
+          instructions.style.color = "#fff";
+          instructions.innerHTML = `
                     <div style="color: #ff9000; font-weight: bold; margin-bottom: 10px;">使用说明：</div>
                     <ol style="margin: 10px 0; padding-left: 20px; color: #fff;">
                         <li>请按顺序保存所有二维码图片</li>
@@ -816,40 +888,39 @@
                         👉 打开解码工具
                     </a>
                 `;
-                qrcodeContainer.appendChild(instructions);
+          qrcodeContainer.appendChild(instructions);
 
-                // 显示压缩内容
-                const compressedContent = 'v2' + compressed;
-                document.getElementById('compressed-text').value = compressedContent;
-                document.getElementById('compressed-content').style.display = 'block';
-
-            } catch (error) {
-                console.error('生成二维码时出错:', error);
-                qrcodeContainer.innerHTML = `
+          // 显示压缩内容
+          const compressedContent = "v2" + compressed;
+          document.getElementById("compressed-text").value = compressedContent;
+          document.getElementById("compressed-content").style.display = "block";
+        } catch (error) {
+          console.error("生成二维码时出错:", error);
+          qrcodeContainer.innerHTML = `
                     <div style="color: #ff4444; padding: 20px; background-color: #2b2b2b; border-radius: 8px; border: 1px solid #ff4444;">
                         <strong>错误：</strong> ${error.message}
                     </div>
                 `;
-            }
         }
+      }
 
-        function updateCharCount() {
-            const text = document.getElementById('text').value;
-            document.getElementById('charCount').textContent = text.length;
-        }
+      function updateCharCount() {
+        const text = document.getElementById("text").value;
+        document.getElementById("charCount").textContent = text.length;
+      }
 
-        function copyCompressedContent() {
-            const textarea = document.getElementById('compressed-text');
-            textarea.select();
-            document.execCommand('copy');
-            
-            // 显示复制成功提示
-            const successMessage = document.getElementById('copy-success');
-            successMessage.style.display = 'inline';
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 2000);
-        }
+      function copyCompressedContent() {
+        const textarea = document.getElementById("compressed-text");
+        textarea.select();
+        document.execCommand("copy");
+
+        // 显示复制成功提示
+        const successMessage = document.getElementById("copy-success");
+        successMessage.style.display = "inline";
+        setTimeout(() => {
+          successMessage.style.display = "none";
+        }, 2000);
+      }
     </script>
-</body>
+  </body>
 </html>
