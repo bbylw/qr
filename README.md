@@ -1,4 +1,5 @@
 # Long Text QR Code Tool
+![](https://cdn.jsdelivr.net/gh/pusvsimg/img@main/Image/20241229100113929.png)
 
 A powerful online QR code toolkit that includes both generator and decoder, supporting compressed long text content. This project is entirely frontend-based, requiring no backend service, and can be deployed on any static hosting platform. Developed with the assistance of Windsurf AI for efficient code writing and optimization.
 
